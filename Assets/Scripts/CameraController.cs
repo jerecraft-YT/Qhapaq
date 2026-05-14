@@ -42,6 +42,8 @@ public class CameraController : MonoBehaviour
 
     private void Start()
     {
+        if (targetPosition == null) targetPosition = transform;
+
         followPosition = targetPosition.position;
         finalPosition = followPosition + offsetDeSeguimiento;
     }
@@ -65,7 +67,7 @@ public class CameraController : MonoBehaviour
             {
                 UpdateFollowY(posicionTarget.y);
             }
-            if (player.playerRb.linearVelocity.y > 0 && EstaSaltando)
+            if (player.playerRb.linearVelocity.y > 1.0f && EstaSaltando)
             {
                 UpdateFollowY(posicionTarget.y);
             }

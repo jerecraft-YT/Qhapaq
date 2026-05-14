@@ -15,32 +15,44 @@ public class PlayerController : MonoBehaviour
     // direccion del movimiento al tocar una tecla
     private Vector2 direction;
 
-    [Header("player config")]
-    [SerializeField] private float speed = 10.0f;
+    [Header("Player Config")]
+    [SerializeField] private float speed = 6.0f;
+    [SerializeField] private float baseGravityScale = 3.0f;
 
-    [Header("jump config")]
-    [SerializeField] private float jumpForce = 10.0f;
-    [SerializeField] private float maxCoyoteTime = 0.1f;
+    [Header("Jump Config")]
+    [SerializeField] private float jumpForce = 13.0f;
+    [SerializeField] private float maxCoyoteTime = 0.075f;
+    [SerializeField] private float jumpBufferTime = 0.1f;
     private float coyoteTime = 0.0f;
-    public float jumpBufferTime = 0.1f;
     private float jumpBuffer = 0.0f;
     //esto es privado porque se cambiara por codigo y no es necesario en el editor
     private bool estaEnSuelo = false;
 
-    [Header("rayForGroundConfig")]
+    [Header("ray Config")]
     //esta seria la mascara que detectaran los raycast, en este caso seria el suelo o ground
     public LayerMask mask;
+    [Header("Ray For Ground Config")]
     public float rayGroundDistance = 0.1f;
     public float distanceGroundRay = 0.35f;
 
-    [Header("rayForTopConfig")]
+    [Header("Ray For Top Config")]
     public float rayTopDistance = 0.2f;
     public float distanceMidleTopRay = 0.1f;
     public float distanceTopRay = 0.35f;
     public float alturaTopRay = 1.5f;
 
-    [Header("correcionEsquinasConfig")]
-    public float fuerzaCorreccionEsquina = 0.1f;
+    [Header("Correcion Esquinas Config")]
+    public float fuerzaCorreccionEsquina = 0.05f;
+
+    [Header("Wall Jump Config")]
+    public float fuerzaWallJump = 10.0f;
+    public float velocidadEnPared = 2.0f;
+    public float velocidadReduccionVelocidad = 10.0f;
+    private bool haciendoWallJump = false;
+    public float altoDetectorWallJump = 1.35f;
+    public float anchoDetectorWallJump = 0.05f;
+    public float detectorWallJumpDistance = 0.35f;
+    public float alturaDetectorWallJump = 0.69f;
 
     void Start()
     {
@@ -60,6 +72,8 @@ public class PlayerController : MonoBehaviour
         CoyoteTime();
 
         DetectTop();
+
+        WallJumpController();
 
         JumpBuffer();
 
@@ -107,36 +121,39 @@ public class PlayerController : MonoBehaviour
         RaycastHit2D hitMidleRigth = Physics2D.Raycast(new Vector2(transform.position.x + distanceMidleTopRay, transform.position.y + alturaTopRay), Vector2.up, rayTopDistance, mask);
         RaycastHit2D hitLeft = Physics2D.Raycast(new Vector2(transform.position.x - distanceTopRay, transform.position.y + alturaTopRay), Vector2.up, rayTopDistance, mask);
         RaycastHit2D hitRigth = Physics2D.Raycast(new Vector2(transform.position.x + distanceTopRay, transform.position.y + alturaTopRay), Vector2.up, rayTopDistance, mask);
-
-        if (hitLeft && !hitMidleLeft && !hitMidleRigth && !hitRigth)
+        
+        if (!hitMidleLeft && !hitMidleRigth)
         {
-            for (int i = 0; i<10; i++)
+            if (hitLeft && !hitRigth)
             {
-                RaycastHit2D hitLeftTemp = Physics2D.Raycast(new Vector2(transform.position.x - distanceTopRay, transform.position.y + alturaTopRay), Vector2.up, rayTopDistance, mask);
-                
-                if (hitLeftTemp)
+                for (int i = 0; i < 10; i++)
                 {
-                    transform.position = new Vector3(transform.position.x + fuerzaCorreccionEsquina, transform.position.y, transform.position.z);
-                }
-                else
-                {
-                    break;
+                    RaycastHit2D hitLeftTemp = Physics2D.Raycast(new Vector2(transform.position.x - distanceTopRay, transform.position.y + alturaTopRay), Vector2.up, rayTopDistance, mask);
+
+                    if (hitLeftTemp)
+                    {
+                        transform.position = new Vector3(transform.position.x + fuerzaCorreccionEsquina, transform.position.y, transform.position.z);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
-        }
-        if (!hitLeft && !hitMidleLeft && !hitMidleRigth && hitRigth)
-        {
-            for (int i = 0; i < 10; i++)
+            if (!hitLeft && hitRigth)
             {
-                RaycastHit2D hitRigthTemp = Physics2D.Raycast(new Vector2(transform.position.x + distanceTopRay, transform.position.y + alturaTopRay), Vector2.up, rayTopDistance, mask);
+                for (int i = 0; i < 10; i++)
+                {
+                    RaycastHit2D hitRigthTemp = Physics2D.Raycast(new Vector2(transform.position.x + distanceTopRay, transform.position.y + alturaTopRay), Vector2.up, rayTopDistance, mask);
 
-                if (hitRigthTemp)
-                {
-                    transform.position = new Vector3(transform.position.x - fuerzaCorreccionEsquina, transform.position.y, transform.position.z);
-                }
-                else
-                {
-                    break;
+                    if (hitRigthTemp)
+                    {
+                        transform.position = new Vector3(transform.position.x - fuerzaCorreccionEsquina, transform.position.y, transform.position.z);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -146,6 +163,36 @@ public class PlayerController : MonoBehaviour
         Debug.DrawLine(new Vector2(transform.position.x + distanceMidleTopRay, transform.position.y + alturaTopRay), hitMidleLeft ? hitMidleLeft.point : new Vector2(transform.position.x + distanceMidleTopRay, transform.position.y + alturaTopRay + rayTopDistance), Color.yellow);
         Debug.DrawLine(new Vector2(transform.position.x - distanceTopRay, transform.position.y + alturaTopRay), hitLeft ? hitLeft.point : new Vector2(transform.position.x - distanceTopRay, transform.position.y + alturaTopRay + rayTopDistance), Color.yellow);
         Debug.DrawLine(new Vector2(transform.position.x + distanceTopRay, transform.position.y + alturaTopRay), hitRigth ? hitRigth.point : new Vector2(transform.position.x + distanceTopRay, transform.position.y + alturaTopRay + rayTopDistance), Color.yellow);
+    }
+
+    private void WallJumpController()
+    {
+        RaycastHit2D hitLeft = Physics2D.BoxCast(new Vector2(transform.position.x - detectorWallJumpDistance, transform.position.y + alturaDetectorWallJump), new Vector2(anchoDetectorWallJump,altoDetectorWallJump),0.0f,Vector2.left,0.0f,mask);
+        RaycastHit2D hitRigth = Physics2D.BoxCast(new Vector2(transform.position.x + detectorWallJumpDistance, transform.position.y + alturaDetectorWallJump), new Vector2(anchoDetectorWallJump, altoDetectorWallJump), 0.0f, Vector2.right, 0.0f, mask);
+
+        if ((hitLeft || hitRigth) && rb.linearVelocity.y < 0)
+        {
+            haciendoWallJump = true;
+            estaEnSuelo = true;
+            rb.gravityScale = 0.0f;
+        }
+        else
+        {
+            haciendoWallJump = false;
+            rb.gravityScale = baseGravityScale;
+        }
+
+        if (haciendoWallJump)
+        {
+            rb.linearVelocity = Vector2.Lerp(rb.linearVelocity,new Vector2(rb.linearVelocity.x, 0.0f), velocidadReduccionVelocidad * Time.deltaTime);
+        }
+
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawWireCube(new Vector2(transform.position.x - detectorWallJumpDistance, transform.position.y + alturaDetectorWallJump), new Vector2(anchoDetectorWallJump, altoDetectorWallJump));
+        Gizmos.DrawWireCube(new Vector2(transform.position.x + detectorWallJumpDistance, transform.position.y + alturaDetectorWallJump), new Vector2(anchoDetectorWallJump, altoDetectorWallJump));
     }
 
     private void AnimationController()
@@ -182,7 +229,7 @@ public class PlayerController : MonoBehaviour
     void Jump()
     {
         //rb.AddForce(Vector2.up * jumpForce);
-        rb.linearVelocityY = jumpForce;
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         coyoteTime = 0;
         jumpBuffer = 0;
     }
