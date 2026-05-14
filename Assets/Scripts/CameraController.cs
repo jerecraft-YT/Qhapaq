@@ -14,6 +14,14 @@ public class CameraController : MonoBehaviour
     public float limitXRigth = 100.0f;
     public float limitYDown = 0.0f;
     public float limitYUp = 100.0f;
+    [Header("Shake Config")]
+    public float forceShake = 1.0f;
+    public float timeShake = 1.0f;
+    public float velocityShake = 10.0f;
+    public float updateShakeEvery = 0.1f;
+    public float timeUpdateShake = 0.1f;
+    private Vector2 targetShake;
+    private Vector2 posicionShake;
     [Header("ControlDeVelocidad")]
     public float velocityXIzquierda = 5.0f;
     public float velocityXDerecha = 5.0f;
@@ -36,14 +44,14 @@ public class CameraController : MonoBehaviour
         finalPosition = followPosition + offsetDeSeguimiento;
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
         UpdateTarget();
 
-        transform.position = new Vector3(finalPosition.x , finalPosition.y , -1.0f);
+        transform.position = new Vector3(finalPosition.x + posicionShake.x , finalPosition.y + posicionShake.y , -1.0f);
     }
 
-    void UpdateTarget()
+    private void UpdateTarget()
     {
         Vector2 posicionTarget = targetPosition.position;
 
@@ -77,12 +85,16 @@ public class CameraController : MonoBehaviour
             UpdateFollowY(posicionTarget.y);
         }
 
+        ControllShake();
+
         FollowX();
         FollowY();
     }
 
-    void UpdateFollowX(float x)
+    private void UpdateFollowX(float x)
     {
+        if (lockX) return;
+
         if (useLimits)
         {
             followPosition.x = Mathf.Clamp(x, limitXLeft, limitXRigth);
@@ -91,8 +103,10 @@ public class CameraController : MonoBehaviour
 
         followPosition.x = x;
     }
-    void UpdateFollowY(float y)
+    private void UpdateFollowY(float y)
     {
+        if (lockY) return;
+
         if (useLimits)
         {
             followPosition.y = Mathf.Clamp(y, limitYDown, limitYUp);
@@ -102,21 +116,64 @@ public class CameraController : MonoBehaviour
         followPosition.y = y;
     }
 
-    void FollowX()
+    private void FollowX()
     {
-        if (lockX) return;
 
         float objectiveX = followPosition.x + offsetDeSeguimiento.x;
 
         finalPosition.x = Mathf.Lerp(finalPosition.x, objectiveX, (objectiveX < finalPosition.x ? velocityXIzquierda : velocityXDerecha) * Time.deltaTime);
+    
+
     }
 
-    void FollowY()
+    private void FollowY()
     {
-        if (lockY) return;
 
         float objectiveY = followPosition.y + offsetDeSeguimiento.y;
 
         finalPosition.y = Mathf.Lerp(finalPosition.y, objectiveY, (objectiveY < finalPosition.y ? velocityYInferior : velocityYSuperior) * Time.deltaTime);
+        
+
+    }
+
+    private void ControllShake()
+    {
+        timeShake = Mathf.Max(timeShake - Time.deltaTime,0.0f);
+
+        if (timeShake > 0)
+        {
+            timeUpdateShake = Mathf.Max(timeUpdateShake - Time.deltaTime, 0.0f);
+
+            if (timeUpdateShake <= 0)
+            {
+                timeUpdateShake = updateShakeEvery;
+
+                targetShake = new Vector2(Random.Range(-forceShake,forceShake), Random.Range(-forceShake, forceShake));
+            }
+        }
+        else
+        {
+            targetShake = Vector2.zero;
+        }
+
+        posicionShake = Vector2.Lerp(posicionShake,targetShake,velocityShake * Time.deltaTime);
+
+    }
+
+    public void Shake(float ForceShake, float DurationShake,float UpdateEvery)
+    {
+        forceShake = ForceShake;
+        timeShake = DurationShake;
+        updateShakeEvery = UpdateEvery;
+        Shake(forceShake, timeShake, updateShakeEvery, velocityShake);
+    }
+    public void Shake(float ForceShake, float DurationShake, float UpdateEvery, float VelocityShake)
+    {
+        timeUpdateShake = 0.0f;
+
+        forceShake = ForceShake;
+        timeShake = DurationShake;
+        velocityShake = VelocityShake;
+        updateShakeEvery = UpdateEvery;
     }
 }

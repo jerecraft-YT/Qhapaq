@@ -830,11 +830,16 @@ MonoBehaviour:
   limitXRigth: 100
   limitYDown: 0
   limitYUp: 100
+  forceShake: 1
+  timeShake: 0
+  velocityShake: 10
+  updateShakeEvery: 0.01
+  timeUpdateShake: 0.1
   velocityXIzquierda: 5
   velocityXDerecha: 5
   velocityYSuperior: 5
   velocityYInferior: 5
-  player: {fileID: 792933966}
+  player: {fileID: 0}
   EstaEnSuelo: 1
   EstaCayendo: 0
   EstaSaltando: 0
