@@ -2,10 +2,12 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
+    //no te recomiendo leer esto de momento, aun faltan cositas y el codigo no esta documentado
+
     private Vector2 finalPosition;
     private Vector2 followPosition;
     [Header("Base Config")]
-    public Transform targetPosition;
+    [SerializeField] private Transform targetPosition;
     public Vector2 offsetDeSeguimiento;
     public bool lockX;
     public bool lockY;
@@ -15,11 +17,11 @@ public class CameraController : MonoBehaviour
     public float limitYDown = 0.0f;
     public float limitYUp = 100.0f;
     [Header("Shake Config")]
-    public float forceShake = 1.0f;
-    public float timeShake = 1.0f;
-    public float velocityShake = 10.0f;
-    public float updateShakeEvery = 0.1f;
-    public float timeUpdateShake = 0.1f;
+    [SerializeField] private float forceShake = 1.0f;
+    [SerializeField] private float timeShake = 1.0f;
+    [SerializeField] private float velocityShake = 10.0f;
+    [SerializeField] private float updateShakeEvery = 0.1f;
+    [SerializeField] private float timeUpdateShake = 0.1f;
     private Vector2 targetShake;
     private Vector2 posicionShake;
     [Header("ControlDeVelocidad")]
@@ -30,7 +32,7 @@ public class CameraController : MonoBehaviour
 
     //esto es solo si seguira a un jugador
     [Header("Player Config")]
-    public PlayerController player;
+    [SerializeField] private PlayerController player;
     [Header("seguir en Y si?")]
     public bool EstaEnSuelo = true;
     public bool EstaCayendo = false;
