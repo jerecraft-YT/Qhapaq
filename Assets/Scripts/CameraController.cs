@@ -16,6 +16,8 @@ public class CameraController : MonoBehaviour
     public float limitXRigth = 100.0f;
     public float limitYDown = 0.0f;
     public float limitYUp = 100.0f;
+    public float maxCameraDistanceDown = 1.0f;
+    public float maxCameraDistanceUp = 1.0f;
     [Header("Shake Config")]
     [SerializeField] private float forceShake = 1.0f;
     [SerializeField] private float timeShake = 1.0f;
@@ -126,7 +128,6 @@ public class CameraController : MonoBehaviour
         float objectiveX = followPosition.x + offsetDeSeguimiento.x;
 
         finalPosition.x = Mathf.Lerp(finalPosition.x, objectiveX, (objectiveX < finalPosition.x ? velocityXIzquierda : velocityXDerecha) * Time.deltaTime);
-    
 
     }
 
@@ -136,7 +137,11 @@ public class CameraController : MonoBehaviour
         float objectiveY = followPosition.y + offsetDeSeguimiento.y;
 
         finalPosition.y = Mathf.Lerp(finalPosition.y, objectiveY, (objectiveY < finalPosition.y ? velocityYInferior : velocityYSuperior) * Time.deltaTime);
-        
+
+        if (player != null)
+        {
+            finalPosition.y = Mathf.Clamp(finalPosition.y, player.transform.position.y - maxCameraDistanceDown + offsetDeSeguimiento.y, player.transform.position.y + maxCameraDistanceUp + offsetDeSeguimiento.y);
+        }
 
     }
 

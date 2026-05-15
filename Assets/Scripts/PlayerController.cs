@@ -53,6 +53,9 @@ public class PlayerController : MonoBehaviour
     public float anchoDetectorWallJump = 0.05f;
     public float detectorWallJumpDistance = 0.35f;
     public float alturaDetectorWallJump = 0.69f;
+    private bool wallJumpDerIzq = false;
+    private float extraVelocityX = 0.0f;
+    public float desaceleracionWallJump = 10.0f;
 
     void Start()
     {
@@ -78,7 +81,7 @@ public class PlayerController : MonoBehaviour
         JumpBuffer();
 
         //cambia la velocidad del jugador a la de la direccion multiplicada por la velocidad y mantenemos la vertical
-        rb.linearVelocity = new Vector2(direction.x * speed, rb.linearVelocity.y);
+        rb.linearVelocity = new Vector2(direction.x * speed + extraVelocityX, rb.linearVelocity.y);
     }
 
     private void CoyoteTime()
@@ -167,11 +170,17 @@ public class PlayerController : MonoBehaviour
 
     private void WallJumpController()
     {
+        extraVelocityX = Mathf.Lerp(extraVelocityX, 0.0f, desaceleracionWallJump * Time.deltaTime);
+
+        if (estaEnSuelo) extraVelocityX = 0.0f;
+
         RaycastHit2D hitLeft = Physics2D.BoxCast(new Vector2(transform.position.x - detectorWallJumpDistance, transform.position.y + alturaDetectorWallJump), new Vector2(anchoDetectorWallJump,altoDetectorWallJump),0.0f,Vector2.left,0.0f,mask);
         RaycastHit2D hitRigth = Physics2D.BoxCast(new Vector2(transform.position.x + detectorWallJumpDistance, transform.position.y + alturaDetectorWallJump), new Vector2(anchoDetectorWallJump, altoDetectorWallJump), 0.0f, Vector2.right, 0.0f, mask);
 
         if ((hitLeft || hitRigth) && rb.linearVelocity.y < 0)
         {
+            wallJumpDerIzq = hitRigth ? true : false;
+
             haciendoWallJump = true;
             estaEnSuelo = true;
             rb.gravityScale = 0.0f;
@@ -184,7 +193,7 @@ public class PlayerController : MonoBehaviour
 
         if (haciendoWallJump)
         {
-            rb.linearVelocity = Vector2.Lerp(rb.linearVelocity,new Vector2(rb.linearVelocity.x, 0.0f), velocidadReduccionVelocidad * Time.deltaTime);
+            rb.linearVelocity = Vector2.Lerp(rb.linearVelocity,new Vector2(rb.linearVelocity.x, velocidadEnPared), velocidadReduccionVelocidad * Time.deltaTime);
         }
 
     }
@@ -228,8 +237,10 @@ public class PlayerController : MonoBehaviour
 
     void Jump()
     {
-        //rb.AddForce(Vector2.up * jumpForce);
+        if (haciendoWallJump) extraVelocityX = wallJumpDerIzq ? -fuerzaWallJump : fuerzaWallJump;
+        
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+        //rb.AddForce(Vector2.up * jumpForce);
         coyoteTime = 0;
         jumpBuffer = 0;
     }
