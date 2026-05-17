@@ -69,11 +69,11 @@ public class CameraController : MonoBehaviour
             {
                 UpdateFollowY(posicionTarget.y);
             }
-            if (player.playerRb.linearVelocity.y > 1.0f && EstaSaltando)
+            if (player.PlayerRb.linearVelocity.y > 1.0f && EstaSaltando)
             {
                 UpdateFollowY(posicionTarget.y);
             }
-            if (player.playerRb.linearVelocity.y < 0 && EstaCayendo)
+            if (player.PlayerRb.linearVelocity.y < 0 && EstaCayendo)
             {
                 UpdateFollowY(posicionTarget.y);
             }
